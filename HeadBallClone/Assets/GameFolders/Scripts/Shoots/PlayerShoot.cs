@@ -19,6 +19,7 @@ public class PlayerShoot
 
     public void ShootLeg()
     {
+        Debug.Log("aa");
         Quaternion shootRotation = Quaternion.Euler(0, 0, 50);
         _leg.transform.rotation = Quaternion.Lerp(_leg.transform.rotation, shootRotation, 25f * Time.deltaTime);
     }

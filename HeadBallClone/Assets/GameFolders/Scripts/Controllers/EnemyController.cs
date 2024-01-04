@@ -4,17 +4,10 @@ using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public enum EnemyAIStateEnum
-{
-    Stand, Jump, Run,
-}
-public enum EnemyAICombatState
-{
-    Shoot, NotShoot
-}
+
 public class EnemyController : MonoBehaviour, IEnemyVerticalMoveWithTransform
 {
-    EnemyAIStateEnum _enemyAIStateEnum;
+
     [SerializeField] Transform _groundCheckerTransform;
     [SerializeField] LayerMask _groundLayer;
     [SerializeField] float _distance;
@@ -28,65 +21,32 @@ public class EnemyController : MonoBehaviour, IEnemyVerticalMoveWithTransform
 
     public Rigidbody2D Rigidbody2D => _rigidbody2D;
 
-
+    public BallController BallController { get => _ballController; set => _ballController = value; }
+    public IEnemyVerticalMove EnemyVerticalMove { get => _enemyVerticalMove; set => _enemyVerticalMove = value; }
 
     IEnemyVerticalMove _enemyVerticalMove;
     Collider2D[] _attackResults;
-    IStateMachine _stateMachine;
+    EnemyBodyStateMachine _stateMachine;
+    public EnemyBodyStateMachine StateMachine { get => _stateMachine; set => _stateMachine = value; }
     private void Awake()
     {
-        _stateMachine = new StateMachine();
         _enemyVerticalMove = new EnemyVerticalMoveWithTransform(this);
         _ballController = GameObject.FindGameObjectWithTag("Ball").transform.GetComponent<BallController>();
         _rigidbody2D = GetComponent<Rigidbody2D>();
         _onGround = new OnGround(_groundCheckerTransform, _distance, _groundLayer);
+        _stateMachine = new EnemyBodyStateMachine(this);
     }
     private void Start()
     {
-        EnemyControllerStandState enemyControllerStandState = new EnemyControllerStandState();
-        EnemyControllerMoveBallState enemyControllerMoveBallState = new EnemyControllerMoveBallState();
-        _stateMachine.SetState(enemyControllerStandState);
-
-        // _stateMachine.NormalStateTransition(enemyControllerStandState, enemyControllerMoveBallState, () => CanShoot());
-
+        _stateMachine.Initialize(_stateMachine.enemyControllerStandState);
     }
     private void Update()
     {
         _stateMachine.Update();
     }
-    private void FixedUpdate()
-    {
-        _enemyVerticalMove.VerticalMoveFixedUpdate();
-    }
-    public void ChangeAI(EnemyAIStateEnum enemyAIStateEnum)
-    {
-        _enemyAIStateEnum = enemyAIStateEnum;
-    }
-
-    private void OnDrawGizmos()
-    {
-        OnDrawGizmosSelected();
-    }
-    private void OnDrawGizmosSelected()
-    {
-        Color color = Color.blue;
-        Gizmos.DrawWireSphere(this.transform.position, 0.5f);
-
-    }
-    private void CanShoot()
-    {
-        // int hitCount = Physics2D.OverlapCircleNonAlloc(transform.position, 0.25f, _attackResults);
-        // for (int i = 0; i < hitCount; i++)
-        // {
-        //     BallController ballController = _attackResults[i].GetComponent<BallController>();
-        //     if (ballController != null)
-        //     {
-        //        ChangeAI(_enemyAIStateEnum.)
-        //     }
-        // }
 
 
-    }
+
 }
 
 
@@ -137,27 +97,48 @@ public class EnemyVerticalMoveWithTransform : IEnemyVerticalMove
 
 public class EnemyControllerStandState : IState
 {
+    EnemyController _enemyController;
+    float _timer;
+    public bool IsStand { get; set; }
+    public EnemyControllerStandState(EnemyController enemyController)
+    {
+        _enemyController = enemyController;
+    }
     public void EnterState()
     {
+        _timer = 0;
 
+        IsStand = false;
     }
 
     public void ExitState()
     {
-
+        _timer = 0;
+        IsStand = false;
     }
 
     public void UpdateState()
     {
+        if (Vector2.Distance(_enemyController.transform.position, _enemyController.BallController.transform.position) < 5)
+        {
+            _enemyController.StateMachine.TransitionTo(_enemyController.StateMachine.enemyControllerMoveBallState);
+        }
         Debug.Log("Stand Update");
-
     }
+
 }
 public class EnemyControllerMoveBallState : IState
 {
+    IEnemyVerticalMove _enemyVerticalMoveWithTransform;
+    EnemyController _enemyController;
+    public EnemyControllerMoveBallState(EnemyController enemyController)
+    {
+        _enemyController = enemyController;
+        _enemyVerticalMoveWithTransform = _enemyController.EnemyVerticalMove;
+    }
     public void EnterState()
     {
-
+        Debug.Log(_enemyVerticalMoveWithTransform);
     }
 
     public void ExitState()
@@ -168,7 +149,11 @@ public class EnemyControllerMoveBallState : IState
     public void UpdateState()
     {
         Debug.Log("Move Update");
+        if (Vector2.Distance(_enemyController.transform.position, _enemyController.BallController.transform.position) > 5)
+        {
 
+        }
+        _enemyVerticalMoveWithTransform.VerticalMoveFixedUpdate();
     }
 }
 public class EnemyControllerMoveKaleState
@@ -179,16 +164,9 @@ public class EnemyControllerJumpState
 }
 
 
-public class EnemyLegController
-{
 
-}
-public class EnemyLegControllerShootState
-{
-}
+
+
 public class EnemyLegControllerJumpShootState
-{
-}
-public class EnemyLegControllerNotShootState
 {
 }
