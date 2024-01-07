@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Assembly_CSharp.Assets.GameFolders.Scripts.Inputs;
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour, IPlayerVerticalMoveWithRigidBody2D, IPlayerJumpWithRigidBody2D
+public class PlayerController : MonoBehaviour, IPlayerVerticalMoveWithRigidBody2D, IPlayerJumpWithRigidBody2D, IEntityController
 {
 
     [SerializeField] Transform _groundCheckerTransform;
@@ -134,7 +134,6 @@ public class PlayerVerticalMoveWithRigidBody2D : AbstractEntityVerticalMoveWithR
 
     public override void VerticalMoveFixedUpdate()
     {
-        Debug.Log("aa");
         _playerVerticalMoveWithRigidBody2D.Rigidbody2D.velocity = new Vector2(1 * _playerVerticalMoveWithRigidBody2D.PlayerInput.HorizontalInput * 200 * Time.deltaTime, _playerVerticalMoveWithRigidBody2D.Rigidbody2D.velocity.y);
     }
 }
