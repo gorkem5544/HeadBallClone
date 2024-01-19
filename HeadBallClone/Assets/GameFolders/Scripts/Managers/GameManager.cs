@@ -6,10 +6,9 @@ using UnityEngine;
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
-
-    public System.Action<CastleTypeEnum> PlayerGoalEvent;
-    GameManagerStateMachine _gameManagerStateMachine;
-    public GameManagerStateMachine GameManagerStateMachine { get => _gameManagerStateMachine; set => _gameManagerStateMachine = value; }
+    public System.Action<CastleTypeEnum> CharacterGoalEvent;
+    GameManagerStateMachine _stateMachine;
+    public GameManagerStateMachine StateMachine { get => _stateMachine; set => _stateMachine = value; }
 
     private void Awake()
     {
@@ -22,14 +21,13 @@ public class GameManager : MonoBehaviour
         {
             Destroy(this.gameObject);
         }
-        _gameManagerStateMachine = new GameManagerStateMachine(this);
-
+        _stateMachine = new GameManagerStateMachine(this);
     }
     private void Start()
     {
-        _gameManagerStateMachine.SetState(_gameManagerStateMachine.GameManagerGameState);
+        _stateMachine.SetState(_stateMachine.GameManagerGameState);
 
-        PlayerGoalEvent += HandleOnPlayerGoal;
+        CharacterGoalEvent += HandleOnPlayerGoal;
     }
 
     private void HandleOnPlayerGoal(CastleTypeEnum castleTypeEnum)
@@ -37,10 +35,10 @@ public class GameManager : MonoBehaviour
         switch (castleTypeEnum)
         {
             case CastleTypeEnum.PlayerCastle:
-                _gameManagerStateMachine.StateMachineTransitionState(_gameManagerStateMachine.GameManagerEnemyGoalState);
+                _stateMachine.StateMachineTransitionState(_stateMachine.GameManagerEnemyGoalState);
                 break;
             case CastleTypeEnum.EnemyCastle:
-                _gameManagerStateMachine.StateMachineTransitionState(_gameManagerStateMachine.GameManagerPlayerGoalState);
+                _stateMachine.StateMachineTransitionState(_stateMachine.GameManagerPlayerGoalState);
                 break;
         }
 
@@ -48,13 +46,12 @@ public class GameManager : MonoBehaviour
     }
     private void OnDisable()
     {
-        PlayerGoalEvent -= HandleOnPlayerGoal;
-
+        CharacterGoalEvent -= HandleOnPlayerGoal;
     }
 
     private void Update()
     {
-        _gameManagerStateMachine.StateMachineUpdateTick();
+        _stateMachine.UpdateState();
     }
 }
 
@@ -93,7 +90,7 @@ public class GameManagerStateMachine
         _currentState = to;
         _currentState?.EnterState();
     }
-    public void StateMachineUpdateTick()
+    public void UpdateState()
     {
         _currentState?.UpdateState();
     }
@@ -120,7 +117,7 @@ public class GameManagerGameState : IState
 
     public void UpdateState()
     {
-        Debug.Log("Game In");
+
     }
 }
 public class GameManagerTimerState : IState
@@ -147,14 +144,15 @@ public class GameManagerTimerState : IState
 
     public void UpdateState()
     {
-        Debug.Log("time In");
+
         _currentTime -= Time.deltaTime;
         if (_currentTime <= 0)
         {
-            _gameManager.GameManagerStateMachine.StateMachineTransitionState(_gameManager.GameManagerStateMachine.GameManagerGameState);
+            _gameManager.StateMachine.StateMachineTransitionState(_gameManager.StateMachine.GameManagerGameState);
         }
     }
 
+    //PlayerManager Sınıfına Taşıncak
     private void ChangedPlayerBodyType(RigidbodyType2D rigidbodyType2D)
     {
         PlayerManager.Instance.ChangedPlayerBodyType(rigidbodyType2D);
@@ -184,7 +182,7 @@ public class GameManagerPlayerGoalState : IState
         _currentTime -= Time.deltaTime;
         if (_currentTime <= 0)
         {
-            _gameManager.GameManagerStateMachine.StateMachineTransitionState(_gameManager.GameManagerStateMachine.GameManagerTimerState);
+            _gameManager.StateMachine.StateMachineTransitionState(_gameManager.StateMachine.GameManagerTimerState);
         }
     }
 }
@@ -212,7 +210,7 @@ public class GameManagerEnemyGoalState : IState
         _currentTime -= Time.deltaTime;
         if (_currentTime <= 0)
         {
-            _gameManager.GameManagerStateMachine.StateMachineTransitionState(_gameManager.GameManagerStateMachine.GameManagerTimerState);
+            _gameManager.StateMachine.StateMachineTransitionState(_gameManager.StateMachine.GameManagerTimerState);
         }
     }
 }

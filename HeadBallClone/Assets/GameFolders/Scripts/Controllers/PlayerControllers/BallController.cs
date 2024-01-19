@@ -31,8 +31,24 @@ public class BallController : MonoBehaviour, IEntityController
     private void Start()
     {
         _ballControllerStateMachine.SetState(_ballControllerStateMachine.BallStandardState);
+
         PowerManager.Instance.BallLittleBouncingPowerEvent += BallLittleBouncingPowerEvent;
         PowerManager.Instance.BallConstantlyBouncingPowerEvent += BallConstantlyBounceEvent;
+        PowerManager.Instance.BallShrinkagePowerEvent += BallShrinkagePowerEvent;
+        PowerManager.Instance.BallExpansionPowerEvent += BallExpansionPowerEvent;
+    }
+    private void Update()
+    {
+        _ballControllerStateMachine.StateMachineUpdateTick();
+    }
+    private void BallExpansionPowerEvent()
+    {
+        _ballControllerStateMachine.StateMachineTransitionState(_ballControllerStateMachine.BallExpansionState);
+    }
+
+    private void BallShrinkagePowerEvent()
+    {
+        _ballControllerStateMachine.StateMachineTransitionState(_ballControllerStateMachine.BallShrinkageState);
     }
 
     private void BallConstantlyBounceEvent()
@@ -44,7 +60,8 @@ public class BallController : MonoBehaviour, IEntityController
     {
         PowerManager.Instance.BallLittleBouncingPowerEvent -= BallLittleBouncingPowerEvent;
         PowerManager.Instance.BallConstantlyBouncingPowerEvent -= BallConstantlyBounceEvent;
-
+        PowerManager.Instance.BallShrinkagePowerEvent -= BallShrinkagePowerEvent;
+        PowerManager.Instance.BallExpansionPowerEvent -= BallExpansionPowerEvent;
     }
 
     private void BallLittleBouncingPowerEvent()
@@ -81,14 +98,6 @@ public class BallController : MonoBehaviour, IEntityController
             _rival = _playerController;
         }
 
-        // if (other.collider.TryGetComponent(out PlayerController player))
-        // {
-        //     ContactPoint2D contact = other.contacts[0];
-        //     Vector3 pos = contact.point;
-        //     _rigidbody2D.AddForce(pos * 2);
-        //     _lastShootCharacter = player;
-        //     _rakip =
-        // }
         if (other.collider.TryGetComponent(out FootController leg))
         {
             Vector2 yon = other.contacts[0].point - (Vector2)transform.position;
@@ -96,6 +105,15 @@ public class BallController : MonoBehaviour, IEntityController
             GetComponent<Rigidbody2D>().AddForce(new Vector2(Mathf.Abs(yon.x), Mathf.Abs(yon.y)) * 5, ForceMode2D.Impulse);
             GetComponent<Rigidbody2D>().AddForce(Vector2.up * 2, ForceMode2D.Impulse);
         }
+    }
+
+    public void ChangeBallSize(float sizeX, float sizeY)
+    {
+        transform.localScale = new Vector2(sizeX, sizeY);
+    }
+    public void ChangeBallSpeed(float speed)
+    {
+
     }
 
 }
@@ -107,17 +125,23 @@ public class BallControllerStateMachine
     BallStandardState _ballStandardState;
     BallConstantlyBounceState _ballConstantlyBounceState;
     BallLittleBounceState _ballLittleBounceState;
+    BallShrinkageState _ballShrinkageState;
+    BallExpansionState _ballExpansionState;
 
     public BallControllerStateMachine(BallController ballController)
     {
         _ballStandardState = new BallStandardState(ballController);
         _ballConstantlyBounceState = new BallConstantlyBounceState(ballController);
         _ballLittleBounceState = new BallLittleBounceState(ballController);
+        _ballShrinkageState = new BallShrinkageState(ballController);
+        _ballExpansionState = new BallExpansionState(ballController);
     }
 
     public BallLittleBounceState BallLittleBounceState { get => _ballLittleBounceState; set => _ballLittleBounceState = value; }
     public BallConstantlyBounceState BallConstantlyBounceState { get => _ballConstantlyBounceState; set => _ballConstantlyBounceState = value; }
     public BallStandardState BallStandardState { get => _ballStandardState; set => _ballStandardState = value; }
+    public BallShrinkageState BallShrinkageState { get => _ballShrinkageState; set => _ballShrinkageState = value; }
+    public BallExpansionState BallExpansionState { get => _ballExpansionState; set => _ballExpansionState = value; }
 
     public void SetState(IState state)
     {
@@ -146,16 +170,15 @@ public class BallStandardState : IState
     public void EnterState()
     {
         _ballController.Collider2D.sharedMaterial = _ballController.BallStandardBounce;
+        _ballController.ChangeBallSize(1, 1);
     }
 
     public void ExitState()
     {
-
     }
 
     public void UpdateState()
     {
-
     }
 }
 public class BallConstantlyBounceState : IState
@@ -214,13 +237,61 @@ public class BallLittleBounceState : IState
         }
     }
 }
-public class BallExpansionState
+public class BallExpansionState : IState
 {
+    float _currentTime;
+    BallController _ballController;
+    public BallExpansionState(BallController ballController)
+    {
+        _ballController = ballController;
+    }
+    public void EnterState()
+    {
+        _currentTime = 0;
+        _ballController.ChangeBallSize(2, 2);
+    }
 
+    public void ExitState()
+    {
+        _currentTime = 0;
+    }
+
+    public void UpdateState()
+    {
+        _currentTime += Time.deltaTime;
+        if (_currentTime > 5)
+        {
+            _ballController.BallControllerStateMachine.StateMachineTransitionState(_ballController.BallControllerStateMachine.BallStandardState);
+        }
+    }
 }
-public class BallShrinkageState
+public class BallShrinkageState : IState
 {
+    float _currentTime;
+    BallController _ballController;
+    public BallShrinkageState(BallController ballController)
+    {
+        _ballController = ballController;
+    }
+    public void EnterState()
+    {
+        _currentTime = 0;
+        _ballController.ChangeBallSize(0.5f, 0.5f);
+    }
 
+    public void ExitState()
+    {
+        _currentTime = 0;
+    }
+
+    public void UpdateState()
+    {
+        _currentTime += Time.deltaTime;
+        if (_currentTime > 5)
+        {
+            _ballController.BallControllerStateMachine.StateMachineTransitionState(_ballController.BallControllerStateMachine.BallStandardState);
+        }
+    }
 }
 public class BallTooFastState
 {

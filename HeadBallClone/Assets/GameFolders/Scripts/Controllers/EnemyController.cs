@@ -123,7 +123,7 @@ public class EnemyControllerStandState : IState
         {
             _enemyController.StateMachine.TransitionTo(_enemyController.StateMachine.enemyControllerMoveBallState);
         }
-        Debug.Log("Stand Update");
+
     }
 
 }
@@ -162,11 +162,8 @@ public class EnemyControllerMoveKaleState
 public class EnemyControllerJumpState
 {
 }
-
-
-
-
-
 public class EnemyLegControllerJumpShootState
 {
 }
+
+

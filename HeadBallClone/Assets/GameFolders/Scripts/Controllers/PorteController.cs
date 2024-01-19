@@ -42,7 +42,7 @@ public class PorteController : MonoBehaviour
     {
         if (other.TryGetComponent(out BallController ballController))
         {
-            GameManager.Instance.PlayerGoalEvent?.Invoke(_castleTypeEnum);
+            GameManager.Instance.CharacterGoalEvent?.Invoke(_castleTypeEnum);
         }
     }
 }
@@ -112,7 +112,7 @@ public class CastleDefaultState : IState
     public void UpdateState()
     {
 
-        Debug.Log("Default" + ">> \b" + _porteController.gameObject.name);
+
     }
 }
 public class CastleSmallSizeState : IState
@@ -147,7 +147,7 @@ public class CastleSmallSizeState : IState
         {
             _porteController.CastleStateMachine.StateMachineTransitionState(_porteController.CastleStateMachine.CastleDefaultState);
         }
-        Debug.Log("Small" + ">> \b" + _porteController.gameObject.name);
+
 
     }
 }
@@ -182,7 +182,7 @@ public class CastleHeighSizeState : IState
         {
             _porteController.CastleStateMachine.StateMachineTransitionState(_porteController.CastleStateMachine.CastleDefaultState);
         }
-        Debug.Log("Height" + ">> \b" + _porteController.gameObject.name);
+
 
     }
 
@@ -212,7 +212,7 @@ public class CastleFreezeState : IState
         {
             _porteController.CastleStateMachine.StateMachineTransitionState(_porteController.CastleStateMachine.CastleDefaultState);
         }
-        Debug.Log("Freeze" + ">> \b" + _porteController.gameObject.name);
+
 
     }
 }
