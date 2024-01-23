@@ -5,8 +5,8 @@ using UnityEngine;
 
 public class CastleManager : MonoBehaviour
 {
-    [SerializeField] PorteController _enemyCastle;
-    [SerializeField] PorteController _playerCastle;
+    [SerializeField] CastleController _enemyCastle;
+    [SerializeField] CastleController _playerCastle;
 
     private void Start()
     {

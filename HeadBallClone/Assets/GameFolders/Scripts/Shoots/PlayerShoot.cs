@@ -4,28 +4,38 @@ using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
 
-public interface IPlayerShoot
+
+public interface IEntityShoot
 {
-    IFootController FootController { get; }
+    void UpdateTick();
 }
-public class PlayerShoot
+
+public class PlayerShoot : IEntityShoot
 {
-    IFootController _footController;
-    Transform _leg;
-    public PlayerShoot(Transform leg)
+    IPlayerShootScriptableObject _playerShootScriptableObject;
+    IPlayerInputService _playerInputService;
+    Transform _footTransform;
+    public PlayerShoot(Transform footTransform, IPlayerShootScriptableObject playerShootScriptableObject, IPlayerInputService playerInputService)
     {
-        _leg = leg;
+        _footTransform = footTransform;
+        _playerShootScriptableObject = playerShootScriptableObject;
+        _playerInputService = playerInputService;
     }
 
-    public void ShootLeg()
+    public void UpdateTick()
     {
-        Debug.Log("aa");
-        Quaternion shootRotation = Quaternion.Euler(0, 0, 50);
-        _leg.transform.rotation = Quaternion.Lerp(_leg.transform.rotation, shootRotation, 25f * Time.deltaTime);
+        if (_playerInputService.PlayerInput.ShootKeyDown)
+        {
+            LegAction(_playerShootScriptableObject.ZRotateValue, _playerShootScriptableObject.ShootSpeed);
+        }
+        else
+        {
+            LegAction(0, _playerShootScriptableObject.ShootSpeed);
+        }
     }
-    public void ResetLeg()
+    private void LegAction(float zRotateValue, float rotateSpeed = 25)
     {
-        Quaternion shootRotation = Quaternion.Euler(0, 0, 0);
-        _leg.transform.rotation = Quaternion.Lerp(_leg.transform.rotation, shootRotation, 25f * Time.deltaTime);
+        Quaternion shootRotation = Quaternion.Euler(0, 0, zRotateValue);
+        _footTransform.transform.rotation = Quaternion.Lerp(_footTransform.transform.rotation, shootRotation, rotateSpeed * Time.deltaTime);
     }
 }
